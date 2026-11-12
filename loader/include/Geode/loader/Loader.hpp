@@ -169,4 +169,16 @@ namespace geode {
     struct LoaderUpdateModResourcesEvent final : Event<LoaderUpdateModResourcesEvent, bool(std::vector<Mod*>)> {
         using Event::Event;
     };
+
+#ifdef GEODE_STATIC
+    /**
+     * @brief Minimal init for static builds, sets up the internal mod and other utils.
+     */
+    Result<> setupStatic();
+
+    /**
+     * @brief Stage two of the initialisation, run on GD's main thread!!!!
+     */
+    Result<> startStatic();
+#endif
 }

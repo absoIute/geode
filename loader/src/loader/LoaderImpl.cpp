@@ -139,10 +139,17 @@ Result<> Loader::Impl::setup() {
     // this function is already on the gd thread, so this should be fine
     ModStateEvent(ModEventType::Loaded, Mod::get()).send();
 
+#ifdef GEODE_STATIC
+    log::info("Skipping mod loading");
+    m_loadingState = LoadingState::Done;
+    m_isSetup = true;
+    GameEvent(GameEventType::ModsLoaded).send();
+#else
     log::info("Refreshing mod graph");
     this->refreshModGraph();
 
     m_isSetup = true;
+#endif
 
     return Ok();
 }

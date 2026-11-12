@@ -381,6 +381,8 @@ void earlyError(std::string message) {
     console::messageBox("Unable to Load Geode!", message);
 }
 
+//static geode needs to be setup by the host mod
+#ifndef GEODE_STATIC
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason != DLL_PROCESS_ATTACH)
         return TRUE;
@@ -401,6 +403,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
 
     return TRUE;
 }
+#endif
 
 // TODO v5: below is a _Throw_Cpp_error reimpl, this is temp for debugging
 

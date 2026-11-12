@@ -22,6 +22,9 @@ std::string Loader::Impl::getGameVersion() {
 }
 
 bool Loader::Impl::userTriedToLoadDLLs() const {
+#ifdef GEODE_STATIC
+    return false;
+#else
     static StringSet KNOWN_MOD_DLLS {
         "betteredit-v4.0.5.dll",
         "betteredit-v4.0.5-min.dll",
@@ -79,6 +82,7 @@ bool Loader::Impl::userTriedToLoadDLLs() const {
     }
 
     return triedToLoadDLLs;
+#endif
 }
 
 bool Loader::Impl::supportsLaunchArguments() const {

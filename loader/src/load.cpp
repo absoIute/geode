@@ -24,6 +24,14 @@ using namespace geode::prelude;
 
 #include "load.hpp"
 
+#ifdef GEODE_STATIC
+namespace geode {
+#ifdef GEODE_IS_WINDOWS
+    void lateAttachRawInput();
+#endif
+}
+#endif
+
 $on_mod(Loaded) {
     ipc::listen("ipc-test", [](matjson::Value data) -> matjson::Value {
         return "Hello from Geode!";
@@ -110,6 +118,55 @@ bool safeModeCheck() {
 // on android the launcher just adds the launch args to enable safe mode
 bool safeModeCheck() {
     return false;
+}
+#endif
+
+#ifdef GEODE_STATIC
+Result<> geode::setupStatic() {
+    static std::mutex s_mutex;
+    static bool s_done = false;
+
+    std::lock_guard lock(s_mutex);
+    if (s_done) {
+        return Ok();
+    }
+
+    GEODE_UNWRAP(LoaderImpl::get()->setupInternalMod());
+    log::Logger::get()->setup();
+
+    s_done = true;
+    return Ok();
+}
+
+Result<> geode::startStatic() {
+    log::info("Setting up loader");
+    {
+        log::NestScope nest;
+        GEODE_UNWRAP(LoaderImpl::get()->setup());
+    }
+
+    crashlog::setupPlatformHandlerPost();
+
+#ifdef GEODE_IS_WINDOWS
+    lateAttachRawInput();
+#endif
+
+    int logMaxAge = Mod::get()->getSettingValue<int>("log-retention-period");
+    if (logMaxAge > 0) {
+        async::runtime().spawnBlocking<void>([logMaxAge] {
+            if (auto e = log::Logger::get()->deleteOldLogs(asp::Duration::fromDays(logMaxAge)).err()) {
+                log::error("Unable to delete old logs: {}", e);
+            }
+        });
+    }
+
+    log::debug("Setting up IPC");
+    {
+        log::NestScope nest;
+        ipc::setup();
+    }
+
+    return Ok();
 }
 #endif
 
