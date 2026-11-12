@@ -6,14 +6,18 @@
  * Zip Utils stuff while not screwing ourselves
  * over with undefined symbols with CC_DLL
  */
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-    #ifdef GEODE_EXPORTING
-        #define CC_ZIP_DLL __declspec(dllexport)
+#ifndef GEODE_STATIC
+    #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+        #ifdef GEODE_EXPORTING
+            #define CC_ZIP_DLL __declspec(dllexport)
+        #else
+            #define CC_ZIP_DLL __declspec(dllimport)
+        #endif
     #else
-        #define CC_ZIP_DLL __declspec(dllimport)
+        #define CC_ZIP_DLL __attribute__((visibility("default")))
     #endif
 #else
-    #define CC_ZIP_DLL __attribute__((visibility("default")))
+    #define CC_ZIP_DLL
 #endif
 
 #endif

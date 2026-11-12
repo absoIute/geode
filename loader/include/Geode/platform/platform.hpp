@@ -34,10 +34,14 @@ static_assert(
     #define GEODE_VIRTUAL_CONSTEXPR
     #define GEODE_NOINLINE __declspec(noinline)
 
-    #ifdef GEODE_EXPORTING
-        #define GEODE_DLL __declspec(dllexport)
+    #ifndef GEODE_STATIC
+        #ifdef GEODE_EXPORTING
+            #define GEODE_DLL __declspec(dllexport)
+        #else
+            #define GEODE_DLL __declspec(dllimport)
+        #endif
     #else
-        #define GEODE_DLL __declspec(dllimport)
+        #define GEODE_DLL
     #endif
 
     #define GEODE_API extern "C" __declspec(dllexport)

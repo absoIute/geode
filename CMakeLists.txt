@@ -5,6 +5,14 @@ cmake_policy(SET CMP0141 NEW)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries static" FORCE)
 
+option(GEODE_STATIC "Builds Geode for static linkage" ON)
+
+if (GEODE_STATIC)
+	set(GEODE_LIB_TYPE STATIC)
+else()
+	set(GEODE_LIB_TYPE SHARED)
+endif()
+
 # Docs flags
 if (GEODE_BUILDING_DOCS)
 	set(GEODE_DISABLE_CLI_CALLS ON)
@@ -309,7 +317,9 @@ if (TARGET qsox)
 	set_target_properties(qsox PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 64)
 endif()
 
-target_compile_definitions(${PROJECT_NAME} INTERFACE MAT_JSON_DYNAMIC=1)
+if (NOT GEODE_STATIC)
+	target_compile_definitions(${PROJECT_NAME} INTERFACE MAT_JSON_DYNAMIC)
+endif()
 
 # this is needed for cross compilation on linux,
 # since fmtlib will fail to compile otherwise

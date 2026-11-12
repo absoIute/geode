@@ -155,7 +155,7 @@ if (ANDROID)
 	CPMAddPackage("gh:geode-sdk/libunwindstack#876b46d")
 endif()
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} ${GEODE_LIB_TYPE} ${SOURCES})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
@@ -221,7 +221,11 @@ if (APPLE)
 	#set_property(TARGET ${PROJECT_NAME} PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 endif()
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC GEODE_EXPORTING MAT_JSON_EXPORTING)
+if (GEODE_STATIC)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC GEODE_STATIC)
+else()
+	target_compile_definitions(${PROJECT_NAME} PUBLIC GEODE_EXPORTING MAT_JSON_EXPORTING)
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 	GEODE_EXPOSE_SECRET_INTERNALS_IN_HEADERS_DO_NOT_DEFINE_PLEASE
@@ -327,40 +331,42 @@ if (NOT GEODE_DISABLE_PRECOMPILED_HEADERS)
 	)
 endif()
 
-# Create launcher
-if (APPLE)
+if (NOT GEODE_STATIC)
+	# Create launcher
+	if (APPLE)
 
-	if("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
-		# Used for File Picker API
-		find_library(UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK UniformTypeIdentifiers)
-		target_link_libraries(${PROJECT_NAME} ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
-	else()
-		set_target_properties(geode-loader PROPERTIES 
-			SYSTEM_NAME MacOS
-			OSX_DEPLOYMENT_TARGET 11.0
-			APPLE_SILICON_PROCESSOR x86_64
-		)
+		if("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
+			# Used for File Picker API
+			find_library(UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK UniformTypeIdentifiers)
+			target_link_libraries(${PROJECT_NAME} ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
+		else()
+			set_target_properties(geode-loader PROPERTIES 
+				SYSTEM_NAME MacOS
+				OSX_DEPLOYMENT_TARGET 11.0
+				APPLE_SILICON_PROCESSOR x86_64
+			)
 
-		# geodebootstrapper is unused on ios
-		add_subdirectory(launcher/mac)
-		set(LAUNCHER_TARGET GeodeBootstrapper)
+			# geodebootstrapper is unused on ios
+			add_subdirectory(launcher/mac)
+			set(LAUNCHER_TARGET GeodeBootstrapper)
+		endif()
+	elseif (WIN32)
+		add_subdirectory(launcher/windows)
+
+		target_link_libraries(${PROJECT_NAME} dbghelp winmm xinput)
+
+		target_compile_definitions(${PROJECT_NAME} PUBLIC ISOLATION_AWARE_ENABLED=1)
+
+		if (MSVC)
+			# disable warnings about CCNode::setID
+			target_link_options(${PROJECT_NAME} PUBLIC /ignore:4217)
+		endif()
+
+		set(LAUNCHER_TARGET ProxyLoader Updater)
 	endif()
-elseif (WIN32)
-	add_subdirectory(launcher/windows)
 
-	target_link_libraries(${PROJECT_NAME} dbghelp winmm xinput)
-
-	target_compile_definitions(${PROJECT_NAME} PUBLIC ISOLATION_AWARE_ENABLED=1)
-
-	if (MSVC)
-		# disable warnings about CCNode::setID
-		target_link_options(${PROJECT_NAME} PUBLIC /ignore:4217)
-	endif()
-
-	set(LAUNCHER_TARGET ProxyLoader Updater)
+	add_subdirectory(test)
 endif()
-
-add_subdirectory(test)
 
 # Add install target using CLI
 if (NOT GEODE_BUILDING_DOCS)

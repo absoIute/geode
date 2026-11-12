@@ -218,6 +218,7 @@ int geodeEntry(void* platformData) {
         ipc::setup();
     }
 
+#ifndef GEODE_STATIC
     // download and install new loader update in the background
 
     if (Mod::get()->getSettingValue<bool>("auto-check-updates")) {
@@ -227,6 +228,7 @@ int geodeEntry(void* platformData) {
     else {
         log::info("Skipped loader update check");
     }
+#endif
 
     log::info("Entry took {}", begin.elapsed());
 

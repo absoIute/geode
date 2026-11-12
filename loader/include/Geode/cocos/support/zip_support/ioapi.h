@@ -24,14 +24,18 @@
 #include "../../platform/CCPlatformConfig.h"
 #include "zipMacro.h"
 
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-    #ifdef GEODE_EXPORTING
-        #define CC_ZIP_DLL __declspec(dllexport)
+#ifndef GEODE_STATIC
+    #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+        #ifdef GEODE_EXPORTING
+            #define CC_ZIP_DLL __declspec(dllexport)
+        #else
+            #define CC_ZIP_DLL __declspec(dllimport)
+        #endif
     #else
-        #define CC_ZIP_DLL __declspec(dllimport)
+        #define CC_ZIP_DLL __attribute__((visibility("default")))
     #endif
 #else
-    #define CC_ZIP_DLL __attribute__((visibility("default")))
+    #define CC_ZIP_DLL
 #endif
 
 #if (!defined(_WIN32)) && (!defined(WIN32))
