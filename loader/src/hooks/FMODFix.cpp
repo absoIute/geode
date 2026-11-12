@@ -16,9 +16,27 @@ struct FMODSystemFix : Modify<FMODSystemFix, FMOD::System> {
     }
 };
 
+#ifdef GEODE_STATIC
+#include <Geode/binding/FMODAudioEngine.hpp>
+static bool checkSystemInitialized() {
+    if (!g_systemInitialized) {
+        auto system = FMODAudioEngine::sharedEngine()->m_system;
+        int channels = 0;
+        if (system && system->getChannelsPlaying(&channels) == FMOD_OK) {
+            g_systemInitialized = true;
+        }
+    }
+    return g_systemInitialized;
+}
+#else
+static bool checkSystemInitialized() {
+    return g_systemInitialized;
+}
+#endif
+
 struct FMODChannelControlFix : Modify<FMODChannelControlFix, FMOD::ChannelControl> {
     FMOD_RESULT setVolume(float volume) {
-        if (!g_systemInitialized) {
+        if (!checkSystemInitialized()) {
             return FMOD_ERR_UNINITIALIZED;
         }
 

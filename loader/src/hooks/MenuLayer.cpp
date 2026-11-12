@@ -45,6 +45,8 @@ struct CustomMenuLayer : Modify<CustomMenuLayer, MenuLayer> {
     bool init() {
         if (!MenuLayer::init()) return false;
 
+    #ifndef GEODE_STATIC
+
         // make sure to add the string IDs for nodes (Geode has no manual
         // hook order support yet so gotta do this to ensure)
         NodeIDs::provideFor(this);
@@ -203,6 +205,8 @@ struct CustomMenuLayer : Modify<CustomMenuLayer, MenuLayer> {
             });
         }
 
+    #endif
+
         // show crash info
         static bool shownLastCrash = false;
         if (
@@ -233,6 +237,8 @@ struct CustomMenuLayer : Modify<CustomMenuLayer, MenuLayer> {
                 popup->show();
             });
         }
+
+    #ifndef GEODE_STATIC
 
         // Check for mod updates
         static bool checkedModUpdates = false;
@@ -279,6 +285,8 @@ struct CustomMenuLayer : Modify<CustomMenuLayer, MenuLayer> {
 
         // Update markers on Geode button (errors, updates, etc.)
         this->updateGeodeButtonMarkers();
+    
+    #endif
 
         // Delay the event by a frame so that MenuLayer is already in the scene
         // and popups show up fine

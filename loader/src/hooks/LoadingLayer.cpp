@@ -1,3 +1,5 @@
+#ifndef GEODE_STATIC
+
 #include <Geode/loader/Event.hpp>
 #include <Geode/modify/CCLayer.hpp>
 #include <Geode/modify/LoadingLayer.hpp>
@@ -268,3 +270,5 @@ struct FallbackCustomLoadingLayer : Modify<FallbackCustomLoadingLayer, CCLayer> 
         return true;
     }
 };
+
+#endif

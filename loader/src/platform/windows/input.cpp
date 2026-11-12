@@ -761,7 +761,10 @@ struct GeodeRawInput : Modify<GeodeRawInput, CCEGLView> {
 
     void setupWindow(CCRect rect) {
         CCEGLView::setupWindow(rect);
+        this->attachToWindow();
+    }
 
+    void attachToWindow() {
         g_mainWindowHWND = *reinterpret_cast<HWND*>(reinterpret_cast<uintptr_t>(m_pMainWindow) + 0x370);
         *reinterpret_cast<GLFWscrollfun*>(reinterpret_cast<uintptr_t>(m_pMainWindow) + 0x340) = &GLFWScrollCallback;
         *reinterpret_cast<GLFWcharfun*>(reinterpret_cast<uintptr_t>(m_pMainWindow) + 0x350) = &GLFWCharCallback;
@@ -779,6 +782,16 @@ struct GeodeRawInput : Modify<GeodeRawInput, CCEGLView> {
         KeyStateTracker::get().clear();
     }
 };
+
+#ifdef GEODE_STATIC
+namespace geode {
+    void lateAttachRawInput() {
+        auto view = CCEGLView::get();
+        if (!view || !view->m_pMainWindow) return;
+        static_cast<GeodeRawInput*>(view)->attachToWindow();
+    }
+}
+#endif
 
 static void GLFWFocusCallback(GLFWwindow* window, int focused) {
     auto view = CCEGLView::get();

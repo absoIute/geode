@@ -121,6 +121,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         );
         SendMessage(button, WM_SETFONT, WPARAM(guiFont), TRUE);
 
+    #ifndef GEODE_STATIC
         button = CreateWindowW(
             L"BUTTON", L"Restart game",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -136,6 +137,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hwnd, TO_HMENU(ID_BUTTON_RESTART_SAFE_MODE), NULL, NULL
         );
         SendMessage(button, WM_SETFONT, WPARAM(guiFont), TRUE);
+    #endif
     } break;
 
     case WM_SIZE: {
