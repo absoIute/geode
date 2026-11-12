@@ -145,7 +145,7 @@ elseif(ANDROID)
 endif()
 
 # Embed version info in binary
-if (WIN32)
+if (WIN32 AND NOT GEODE_STATIC)
 	configure_file(src/platform/windows/info.rc.in info.rc)
 	set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/info.rc)
 endif()
@@ -284,7 +284,16 @@ if (NOT GEODE_BUILDING_DOCS)
 	target_link_libraries(${PROJECT_NAME} md4c minizip simdutf fast_float)
 endif()
 
-target_link_libraries(${PROJECT_NAME} TulipHook geode-sdk mat-json-impl)
+if (TARGET mat-json-impl)
+	target_link_libraries(${PROJECT_NAME} TulipHook geode-sdk mat-json-impl)
+else()
+	target_link_libraries(${PROJECT_NAME} TulipHook geode-sdk mat-json)
+endif()
+
+if (GEODE_STATIC)
+	# one entry.cpp please :nerd:
+	target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../entry.cpp)
+endif()
 
 # always use unity builds for some dependencies
 if (TARGET md4c)
@@ -293,7 +302,9 @@ endif()
 if (TARGET minizip)
 	set_target_properties(minizip PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 64)
 endif()
-set_target_properties(mat-json-impl PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 64)
+if (TARGET mat-json-impl)
+	set_target_properties(mat-json-impl PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 64)
+endif()
 
 # unity build for geode
 if (GEODE_UNITY_BUILD)
@@ -331,15 +342,26 @@ if (NOT GEODE_DISABLE_PRECOMPILED_HEADERS)
 	)
 endif()
 
+if (APPLE)
+	if("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
+		# Used for File Picker API
+		find_library(UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK UniformTypeIdentifiers)
+		target_link_libraries(${PROJECT_NAME} ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
+	endif()
+elseif (WIN32)
+	target_link_libraries(${PROJECT_NAME} dbghelp winmm xinput)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC ISOLATION_AWARE_ENABLED=1)
+
+	if (MSVC)
+		# disable warnings about CCNode::setID
+		target_link_options(${PROJECT_NAME} PUBLIC /ignore:4217)
+	endif()
+endif()
+
 if (NOT GEODE_STATIC)
 	# Create launcher
 	if (APPLE)
-
-		if("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
-			# Used for File Picker API
-			find_library(UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK UniformTypeIdentifiers)
-			target_link_libraries(${PROJECT_NAME} ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
-		else()
+		if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
 			set_target_properties(geode-loader PROPERTIES 
 				SYSTEM_NAME MacOS
 				OSX_DEPLOYMENT_TARGET 11.0
@@ -352,16 +374,6 @@ if (NOT GEODE_STATIC)
 		endif()
 	elseif (WIN32)
 		add_subdirectory(launcher/windows)
-
-		target_link_libraries(${PROJECT_NAME} dbghelp winmm xinput)
-
-		target_compile_definitions(${PROJECT_NAME} PUBLIC ISOLATION_AWARE_ENABLED=1)
-
-		if (MSVC)
-			# disable warnings about CCNode::setID
-			target_link_options(${PROJECT_NAME} PUBLIC /ignore:4217)
-		endif()
-
 		set(LAUNCHER_TARGET ProxyLoader Updater)
 	endif()
 
